@@ -20,4 +20,16 @@ def csv_reader(filename, column, sep=';', comment='#'):
     return res
 
 
+def dimacs_reader(filename):
+    '''
+    '''
+    res = set()
+    with open(filename, 'r') as stream:
+        line = readline()
+        while not line:
+            if line[0] == 'c':
+                # c 666 FEATURE_NAME
+                res.add(line.split(' ')[2])
+        line = readline()
+    return res
 
