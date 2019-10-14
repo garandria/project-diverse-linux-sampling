@@ -29,7 +29,7 @@ def main():
             read(".config", data)
 
         with open('data.csv', 'w') as stream:
-            stream.write('#{:64s};{}\n'.format('feature', 'occurence'))
+            stream.write('{:64s};{}\n'.format('feature', 'occurence'))
             for k in data:
                 stream.write('{:64s};{:d}\n'.format(k, data[k]))
     else :
