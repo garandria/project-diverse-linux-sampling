@@ -1,6 +1,7 @@
 
+
 def read(filename):
-    data = set()
+    data = dict()
     with open(filename, 'r') as stream:
         line = stream.readline()
         while line != '':
