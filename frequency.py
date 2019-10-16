@@ -57,7 +57,7 @@ def main():
     content += '{:64s};{}\n'.format('feature', 'occurence')
     for k in data:
         content += '{:64s};{:d}\n'.format(k, data[k])
-    with open('data_{}.csv'.format(args.ntests), 'a') as stream:
+    with open('data_{}.csv'.format(args.ntests), 'w') as stream:
         stream.write(content)
 
 
