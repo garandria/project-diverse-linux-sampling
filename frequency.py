@@ -42,7 +42,8 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('dir',
                         help='path to directory containing the makefile')
-    parser.add_argument('-n', dest='ntests', default=50, type=int)
+    parser.add_argument('-n', dest='ntests', default=50, type=int,
+                        help='Number of .config files to generate')
     args = parser.parse_args()
 
     if args.dir[-1] != ['/']:
