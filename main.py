@@ -1,9 +1,23 @@
+'''This program generates .config files a certain amount of time
+(number given by the user) then generate a csv file that contains the
+options of the .config file and its frequency.
+
+'''
+
+__author__ = "Georges Aaron RANDRIANAINA"
+__email__ = "georges-aaron.randrianaina@ens-rennes.fr"
+
 import os
-import sys
 import argparse
 
 
 def read(filename):
+    '''Reads a .config file and returns
+    :param: .config filename
+    :type: string
+    :return: table containing {option : frequency}
+    :rtype: dict
+    '''
     data = dict()
     with open(filename, 'r') as stream:
         line = stream.readline()
@@ -19,6 +33,12 @@ def read(filename):
 
 
 def main():
+    '''Main program
+    Parse the input argument then launch the .config generation n
+    times (n given by the use) and saves the options of each file
+    using `read`.
+
+    '''
     parser = argparse.ArgumentParser()
     parser.add_argument('dir',
                         help='path to directory containing the makefile')
