@@ -1,9 +1,8 @@
 '''
 '''
+
 import argparse
 
-TUXML_FILENAME='alloptions.csv'
-DIMACS_FILENAME='../Feature-Model-History-of-Linux/2017/2017-09-11T13_10_57-07_00/2017/2017-09-11T13_10_57-07_00/out.dimacs'
 
 def csv_reader(filename, column=1, sep=';', comment='#'):
     '''
@@ -12,7 +11,7 @@ def csv_reader(filename, column=1, sep=';', comment='#'):
     col = column - 1
     with open(filename, 'r') as stream:
         stream.readline()       # first line (title)
-        line = stream.readline()        
+        line = stream.readline()
         while line:
             if not (line[0] == comment):
                 feature = line.split(sep)[col]
@@ -36,6 +35,7 @@ def dimacs_reader(filename, clean=False):
             line = stream.readline()
     return res
 
+
 def main():
     '''
     '''
@@ -43,22 +43,29 @@ def main():
     parser.add_argument('--clean',
                         help='clean the name in the dimacs file',
                         action='store_true')
+    parser.add_argument('-dimacs',
+                        help='path (including the file) to the dimacs file',
+                        required=True)
+    parser.add_argument('-csv',
+                        help='path (including the file) to the csv file',
+                        required=True)
     args = parser.parse_args()
 
     diff = set()
-    csv = csv_reader("../Kanalyser/alloptions-x64-v4.15.csv", sep=',')
-    dimacs = dimacs_reader(DIMACS_FILENAME, args.clean)
+    csv = csv_reader(args.csv, sep=',')
+    dimacs = dimacs_reader(args.dimacs, args.clean)
     len_csv = len(csv)
     len_dimacs = len(dimacs)
     if len_dimacs > len_csv:
         diff = dimacs - csv
     else:
         diff = csv - dimacs
-    with open('output.csv', 'w') as stream:
+    with open('output.csv', 'a') as stream:
         stream.write('# CSV FILE : {} features\n'.format(len_csv))
         stream.write('# DIMACS FILE : {} features\n'.format(len_dimacs))
         for f in diff:
             stream.write('{}\n'.format(f))
-    
+
+
 if __name__ == '__main__':
     main()
