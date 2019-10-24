@@ -62,7 +62,7 @@ def dimacs_reader(filename, clean=False):
             # c 666 FEATURE_NAME
             feature = line.split(' ')[2].rstrip('\n')
             if clean:
-                feature = feature.split('=')[0]
+                feature = feature.split('=')[0].rstrip('_MODULE')
             res.add(feature)
             line = stream.readline()
     return res
