@@ -16,8 +16,8 @@ __email__ = "georges-aaron.randrianaina@ens-rennes.fr"
 import argparse
 
 
-def csv_reader(filename, column=1, sep=';', comment='#'):
-    '''Reads a csv file of options and return a dictionary which the 
+def csv_reader(filename, column=1, sep=',', comment='#'):
+    '''Reads a csv file of options and return a dictionary which the
     keys are options and values the type of the option
 
     :param filename: path (file included) to the csv file
@@ -25,7 +25,7 @@ def csv_reader(filename, column=1, sep=';', comment='#'):
     :param column: (optional) number of the column containing options
     (default is 1.)
     :type: int
-    :param sep: (optional) separator used in the file (default is ';')
+    :param sep: (optional) separator used in the file (default is ',')
     :type: str
     :param comment: (optional) character for comment (default is '#')
     :type: str
@@ -40,7 +40,9 @@ def csv_reader(filename, column=1, sep=';', comment='#'):
         while line:
             if not (line[0] == comment):
                 feature = line.split(sep)[col]
-                ftype = line.split(sep)[col + 1]
+                assert feature != '', 'CSV : feature empty'
+                ftype = line.split(sep)[col + 1].rstrip('\n')
+                assert ftype != '', 'CSV : ftype empty'
                 res[feature] = ftype
             line = stream.readline()
     return res
@@ -60,6 +62,7 @@ def dimacs_reader(filename):
         while line[0] == 'c':
             # c 666 FEATURE_NAME
             feature = line.split(' ')[2].rstrip('\n')
+            assert feature != '', 'DIMACS : feature empty'
             res.add(feature)
             line = stream.readline()
     return res
@@ -82,18 +85,40 @@ def clean_set(mset):
     return res
 
 
-def to_dot(dico):
+def to_dot(dico, type_dico, limit=10):
     '''Write the dotviz code to build a tree for the dictionary
-    :param dico: a dictionary like {'key': ['values'*]}
+    :param dico: a dictionary like {option: [reprentation+]}
     :type: dict
+    :param type_dico: a dictionary like {option : type}
+    :type: dict
+    :param limit: number of children of the tree
+    :type: int
     :return: a string containing the dotviz code
     :rtype: string
     '''
     res = 'graph {\n'
-    for key in dico:
-        res += 'TYPE -- {}\n'.format(key)
-        for value in dico[key]:
-            res += '{} -- {}\n'.format(key, value)
+    dico_length = len(dico)
+    tmp_limit = limit
+    if dico_length < limit:
+        tmp_limit = dico_length
+    types = set()
+    for key in list(dico)[:tmp_limit]:
+        if key in type_dico:
+            if not(type_dico[key] in types):
+                res += 'ROOT -- "{}"\n'.format(type_dico[key])
+                types.add(type_dico[key])
+            res += '"{}" -- "{}"\n'.format(type_dico[key], key)
+        else:
+            if not('UNKNOWN' in types):
+                res += 'ROOT -- UNKNOWN\n'
+                types.add('UNKNOWN')
+            res += 'UNKNOWN -- "{}"\n'.format(key)
+        if len(dico[key]) > limit:
+            for i in range(limit):
+                res += '"{}" -- "{}"\n'.format(key, dico[key][i])
+        else:
+            for elt in dico[key]:
+                res += '"{}" -- "{}"\n'.format(key, elt)
     res += '}'
     return res
 
@@ -179,7 +204,7 @@ def opt_repr(clean_set, mset):
     dico = dict()
     for elt in clean_set:
         for rep in mset:
-            if elt in rep:
+            if str.startswith(rep, elt) and elt != rep:
                 try:
                     dico[elt].append(rep)
                 except KeyError:
@@ -207,27 +232,29 @@ def main():
                         required=True)
     args = parser.parse_args()
 
+    # dimacs = dimacs_reader(args.dimacs)
     # with open('tree.dot', 'w') as stream:
-    #     stream.write(to_dot(build_type_dict_from_csv(args.csv)))
+    #     stream.write(to_dot(opt_repr(clean_set(dimacs), dimacs),
+    #                         csv_reader(args.csv), limit=50))
 
-    csv = csv_reader(args.csv, sep=',')
-    dimacs = dimacs_reader(args.dimacs, args.clean)
+    csv = set(csv_reader(args.csv, sep=','))
+    dimacs = dimacs_reader(args.dimacs)
     dimacs_cleaned = clean_set(dimacs)
     diff_c_d = diff(csv, dimacs_cleaned)
     diff_d_c = diff(dimacs_cleaned, csv)
 
-    modif = opt_repr(dimacs_cleaned, dimacs)
-    
+    # modif = opt_repr(dimacs_cleaned, dimacs)
+
     content = ''
     content += '# CSV FILE : {} features\n'.format(len(csv))
     content += '# DIMACS FILE : {} features\n'.format(len(dimacs_cleaned))
     content += '\n'
-    content += '# DIMACS \\ CSV\n'
+    content += '# DIMACS \\ CSV {} features\n'.format(len(diff_d_c))
     content += '\n'
     for f in diff_d_c:
         content += '{}\n'.format(f)
     content += '\n'
-    content += '# CSV \\ DIMACS\n'
+    content += '# CSV \\ DIMACS {} features\n'.format(len(diff_c_d))
     content += '\n'
     for f in diff_c_d:
         content += '{}\n'.format(f)
