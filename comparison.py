@@ -104,9 +104,29 @@ def main():
     content += '\n'
     for f in diff:
         content += '{}\n'.format(f)
-
-    with open('output.csv', 'w') as stream:
+    outname = ''
+    if args.clean:
+        outname = 'output-clean.csv'
+    else:
+        outname = 'output.csv'
+    with open(outname, 'w') as stream:
         stream.write(content)
+
+
+def to_dot(dico):
+    '''Write the dotviz code to build a tree for the dictionary
+    :param dico: a dictionary like {'key': ['values'*]}
+    :type: dict
+    :return: a string containing the dotviz code
+    :rtype: string
+    '''
+    res = 'graph {\n'
+    for key in dico:
+        res += 'TYPE -- {}\n'.format(key)
+        for value in dico[key]:
+            res += '{} -- {}\n'.format(key, value)
+    res += '}'
+    return res
 
 
 if __name__ == '__main__':
