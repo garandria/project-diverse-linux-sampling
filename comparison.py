@@ -60,12 +60,55 @@ def dimacs_reader(filename, clean=False):
         line = stream.readline()
         while line[0] == 'c':
             # c 666 FEATURE_NAME
-            feature = line.split(' ')[2].rstrip('\n')
+            feature = line.split(' ')[2].rsplit('\n')
             if clean:
                 feature = feature.split('=')[0]
             res.add(feature)
             line = stream.readline()
     return res
+
+
+def to_dot(dico):
+    '''Write the dotviz code to build a tree for the dictionary
+    :param dico: a dictionary like {'key': ['values'*]}
+    :type: dict
+    :return: a string containing the dotviz code
+    :rtype: string
+    '''
+    res = 'graph {\n'
+    for key in dico:
+        res += 'TYPE -- {}\n'.format(key)
+        for value in dico[key]:
+            res += '{} -- {}\n'.format(key, value)
+    res += '}'
+    return res
+
+
+def build_type_dict_from_csv(filename, option_col=1, type_col=2,
+                             sep=',', comment='#'):
+    '''Build a dictionary from a csv file like
+    {'type': []}
+    :param filename: name of the csv file
+    :type: string
+    :return: dictionary
+    :rtype: dict
+    '''
+    ocol = option_col - 1
+    tcol = type_col - 1
+    dico = dict()
+    with open(filename, 'r') as stream:
+        stream.readline()       # first line (title)
+        line = stream.readline()
+        while line:
+            if not (line[0] == comment):
+                type = line.split(sep)[tcol].rstrip('\n')
+                option = line.split(sep)[ocol]
+                try:
+                    dico[type].append(option)
+                except KeyError:
+                    dico[type] = [option]
+            line = stream.readline()
+    return dico
 
 
 def main():
@@ -111,22 +154,6 @@ def main():
         outname = 'output.csv'
     with open(outname, 'w') as stream:
         stream.write(content)
-
-
-def to_dot(dico):
-    '''Write the dotviz code to build a tree for the dictionary
-    :param dico: a dictionary like {'key': ['values'*]}
-    :type: dict
-    :return: a string containing the dotviz code
-    :rtype: string
-    '''
-    res = 'graph {\n'
-    for key in dico:
-        res += 'TYPE -- {}\n'.format(key)
-        for value in dico[key]:
-            res += '{} -- {}\n'.format(key, value)
-    res += '}'
-    return res
 
 
 if __name__ == '__main__':
