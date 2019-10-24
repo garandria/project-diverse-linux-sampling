@@ -60,7 +60,7 @@ def dimacs_reader(filename, clean=False):
         line = stream.readline()
         while line[0] == 'c':
             # c 666 FEATURE_NAME
-            feature = line.split(' ')[2].split('\n')[0]
+            feature = line.split(' ')[2].rstrip('\n')
             if clean:
                 feature = feature.split('=')[0]
             res.add(feature)
