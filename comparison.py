@@ -44,7 +44,7 @@ def csv_reader(filename, column=1, sep=';', comment='#'):
     return res
 
 
-def dimacs_reader(filename, clean=False):
+def dimacs_reader(filename):
     '''Reads a dimacs file and returns a set containing all the options
 
     :param filename: path (file included) to the dimacs file
@@ -61,10 +61,25 @@ def dimacs_reader(filename, clean=False):
         while line[0] == 'c':
             # c 666 FEATURE_NAME
             feature = line.split(' ')[2].rstrip('\n')
-            if clean:
-                feature = feature.split('=')[0].rstrip('_MODULE')
             res.add(feature)
             line = stream.readline()
+    return res
+
+
+def clean_set(mset):
+    '''Cleans a set of feature
+
+    For instance :
+    "MY_OPTION=1" and "MY_OPTION=" are considered one option
+    so it will add only one option MY_OPTION
+    :param mset: a set of options
+    :type: set
+    :return: a set of real options
+    :rtype: set
+    '''
+    res = set()
+    for elt in mset:
+        res.add(elt.split('=')[0].rstrim('_MODULE'))
     return res
 
 
@@ -177,22 +192,25 @@ def main():
     # with open('tree.dot', 'w') as stream:
     #     stream.write(to_dot(build_type_dict_from_csv(args.csv)))
 
-    diff = set()
     csv = csv_reader(args.csv, sep=',')
     dimacs = dimacs_reader(args.dimacs, args.clean)
-    len_csv = len(csv)
-    len_dimacs = len(dimacs)
-    if len_dimacs > len_csv:
-        diff = dimacs - csv
-    else:
-        diff = csv - dimacs
-
+    diff_c_d = diff(csv, dimacs)
+    diff_d_c = diff(dimacs, csv)
+    
     content = ''
-    content += '# CSV FILE : {} features\n'.format(len_csv)
-    content += '# DIMACS FILE : {} features\n'.format(len_dimacs)
+    content += '# CSV FILE : {} features\n'.format(len(csv))
+    content += '# DIMACS FILE : {} features\n'.format(len(dimacs))
     content += '\n'
-    for f in diff:
+    content += '# DIMACS \\ CSV\n'
+    content += '\n'
+    for f in diff_d_c:
         content += '{}\n'.format(f)
+    content += '\n'
+    content += '# CSV \\ DIMACS\n'
+    content += '\n'
+    for f in diff_c_d:
+        content += '{}\n'.format(f)
+
     outname = ''
     if args.clean:
         outname = 'output-clean.csv'
