@@ -49,9 +49,6 @@ def dimacs_reader(filename):
 
     :param filename: path (file included) to the dimacs file
     :type: str
-    :param clean: (optional) clean the option : get rid of extra '=' or '=n' or
-    ...  added the option (default is False)
-    :type: bool
     :return: set of options
     :rtype: set
     '''
