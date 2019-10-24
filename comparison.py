@@ -17,7 +17,8 @@ import argparse
 
 
 def csv_reader(filename, column=1, sep=';', comment='#'):
-    '''Reads a csv file of options and return a set containing all options
+    '''Reads a csv file of options and return a dictionary which the 
+    keys are options and values the type of the option
 
     :param filename: path (file included) to the csv file
     :type: str
@@ -28,10 +29,10 @@ def csv_reader(filename, column=1, sep=';', comment='#'):
     :type: str
     :param comment: (optional) character for comment (default is '#')
     :type: str
-    :return: set of all options
-    :rtype: set
+    :return: a table like {option : type} association
+    :rtype: dict
     '''
-    res = set()
+    res = dict()
     col = column - 1
     with open(filename, 'r') as stream:
         stream.readline()       # first line (title)
@@ -39,7 +40,8 @@ def csv_reader(filename, column=1, sep=';', comment='#'):
         while line:
             if not (line[0] == comment):
                 feature = line.split(sep)[col]
-                res.add(feature)
+                ftype = line.split(sep)[col + 1]
+                res[feature] = ftype
             line = stream.readline()
     return res
 
@@ -76,7 +78,7 @@ def clean_set(mset):
     '''
     res = set()
     for elt in mset:
-        res.add(elt.split('=')[0].rstrim('_MODULE'))
+        res.add(elt.split('=')[0].rstrip('_MODULE'))
     return res
 
 
@@ -166,6 +168,25 @@ def diff(set1, set2):
     return res
 
 
+def opt_repr(clean_set, mset):
+    '''Create a dictionary with the option and the representation
+
+    :param clean_set: a set of only option (clean)
+    :type: set
+    :param mset: a set of options (with added chars)
+    :type: set
+    '''
+    dico = dict()
+    for elt in clean_set:
+        for rep in mset:
+            if elt in rep:
+                try:
+                    dico[elt].append(rep)
+                except KeyError:
+                    dico[elt] = [rep]
+    return dico
+
+
 def main():
     '''The main function that parse the input arguments from the command
     line and use the previous defined function to read files. This
@@ -191,12 +212,15 @@ def main():
 
     csv = csv_reader(args.csv, sep=',')
     dimacs = dimacs_reader(args.dimacs, args.clean)
-    diff_c_d = diff(csv, dimacs)
-    diff_d_c = diff(dimacs, csv)
+    dimacs_cleaned = clean_set(dimacs)
+    diff_c_d = diff(csv, dimacs_cleaned)
+    diff_d_c = diff(dimacs_cleaned, csv)
+
+    modif = opt_repr(dimacs_cleaned, dimacs)
     
     content = ''
     content += '# CSV FILE : {} features\n'.format(len(csv))
-    content += '# DIMACS FILE : {} features\n'.format(len(dimacs))
+    content += '# DIMACS FILE : {} features\n'.format(len(dimacs_cleaned))
     content += '\n'
     content += '# DIMACS \\ CSV\n'
     content += '\n'
