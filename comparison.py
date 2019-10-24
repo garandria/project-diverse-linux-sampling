@@ -60,7 +60,7 @@ def dimacs_reader(filename, clean=False):
         line = stream.readline()
         while line[0] == 'c':
             # c 666 FEATURE_NAME
-            feature = line.split(' ')[2].rsplit('\n')
+            feature = line.split(' ')[2].rstrip('\n')
             if clean:
                 feature = feature.split('=')[0]
             res.add(feature)
@@ -102,7 +102,34 @@ def build_type_dict_from_csv(filename, option_col=1, type_col=2,
         while line:
             if not (line[0] == comment):
                 type = line.split(sep)[tcol].rstrip('\n')
-                option = line.split(sep)[ocol]
+                option = '"' + line.split(sep)[ocol] + '"'
+                try:
+                    dico[type].append(option)
+                except KeyError:
+                    dico[type] = [option]
+            line = stream.readline()
+    return dico
+
+
+def build_option_type_dict(filename, option_col=1, type_col=2,
+                           sep=',', comment='#'):
+    '''Build a dictionary from a csv file like
+    {'type': []}
+    :param filename: name of the csv file
+    :type: string
+    :return: dictionary
+    :rtype: dict
+    '''
+    ocol = option_col - 1
+    tcol = type_col - 1
+    dico = dict()
+    with open(filename, 'r') as stream:
+        stream.readline()       # first line (title)
+        line = stream.readline()
+        while line:
+            if not (line[0] == comment):
+                type = line.split(sep)[tcol].rstrip('\n')
+                option = '"' + line.split(sep)[ocol] + '"'
                 try:
                     dico[type].append(option)
                 except KeyError:
@@ -131,29 +158,32 @@ def main():
                         required=True)
     args = parser.parse_args()
 
-    diff = set()
-    csv = csv_reader(args.csv, sep=',')
-    dimacs = dimacs_reader(args.dimacs, args.clean)
-    len_csv = len(csv)
-    len_dimacs = len(dimacs)
-    if len_dimacs > len_csv:
-        diff = dimacs - csv
-    else:
-        diff = csv - dimacs
+    with open('tree.dot', 'w') as stream:
+        stream.write(to_dot(build_type_dict_from_csv(args.csv)))
 
-    content = ''
-    content += '# CSV FILE : {} features\n'.format(len_csv)
-    content += '# DIMACS FILE : {} features\n'.format(len_dimacs)
-    content += '\n'
-    for f in diff:
-        content += '{}\n'.format(f)
-    outname = ''
-    if args.clean:
-        outname = 'output-clean.csv'
-    else:
-        outname = 'output.csv'
-    with open(outname, 'w') as stream:
-        stream.write(content)
+    # diff = set()
+    # csv = csv_reader(args.csv, sep=',')
+    # dimacs = dimacs_reader(args.dimacs, args.clean)
+    # len_csv = len(csv)
+    # len_dimacs = len(dimacs)
+    # if len_dimacs > len_csv:
+    #     diff = dimacs - csv
+    # else:
+    #     diff = csv - dimacs
+
+    # content = ''
+    # content += '# CSV FILE : {} features\n'.format(len_csv)
+    # content += '# DIMACS FILE : {} features\n'.format(len_dimacs)
+    # content += '\n'
+    # for f in diff:
+    #     content += '{}\n'.format(f)
+    # outname = ''
+    # if args.clean:
+    #     outname = 'output-clean.csv'
+    # else:
+    #     outname = 'output.csv'
+    # with open(outname, 'w') as stream:
+    #     stream.write(content)
 
 
 if __name__ == '__main__':
