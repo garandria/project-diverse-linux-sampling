@@ -138,6 +138,22 @@ def build_option_type_dict(filename, option_col=1, type_col=2,
     return dico
 
 
+def diff(set1, set2):
+    '''Gives the set of element in set1 but not in set2
+    :param set1: a set
+    :type: set
+    :param set2: a set
+    :type: set
+    :return: a set
+    :rtype: set
+    '''
+    res = set()
+    for elt in set1:
+        if elt not in set2:
+            res.add(elt)
+    return res
+
+
 def main():
     '''The main function that parse the input arguments from the command
     line and use the previous defined function to read files. This
@@ -158,32 +174,32 @@ def main():
                         required=True)
     args = parser.parse_args()
 
-    with open('tree.dot', 'w') as stream:
-        stream.write(to_dot(build_type_dict_from_csv(args.csv)))
+    # with open('tree.dot', 'w') as stream:
+    #     stream.write(to_dot(build_type_dict_from_csv(args.csv)))
 
-    # diff = set()
-    # csv = csv_reader(args.csv, sep=',')
-    # dimacs = dimacs_reader(args.dimacs, args.clean)
-    # len_csv = len(csv)
-    # len_dimacs = len(dimacs)
-    # if len_dimacs > len_csv:
-    #     diff = dimacs - csv
-    # else:
-    #     diff = csv - dimacs
+    diff = set()
+    csv = csv_reader(args.csv, sep=',')
+    dimacs = dimacs_reader(args.dimacs, args.clean)
+    len_csv = len(csv)
+    len_dimacs = len(dimacs)
+    if len_dimacs > len_csv:
+        diff = dimacs - csv
+    else:
+        diff = csv - dimacs
 
-    # content = ''
-    # content += '# CSV FILE : {} features\n'.format(len_csv)
-    # content += '# DIMACS FILE : {} features\n'.format(len_dimacs)
-    # content += '\n'
-    # for f in diff:
-    #     content += '{}\n'.format(f)
-    # outname = ''
-    # if args.clean:
-    #     outname = 'output-clean.csv'
-    # else:
-    #     outname = 'output.csv'
-    # with open(outname, 'w') as stream:
-    #     stream.write(content)
+    content = ''
+    content += '# CSV FILE : {} features\n'.format(len_csv)
+    content += '# DIMACS FILE : {} features\n'.format(len_dimacs)
+    content += '\n'
+    for f in diff:
+        content += '{}\n'.format(f)
+    outname = ''
+    if args.clean:
+        outname = 'output-clean.csv'
+    else:
+        outname = 'output.csv'
+    with open(outname, 'w') as stream:
+        stream.write(content)
 
 
 if __name__ == '__main__':
