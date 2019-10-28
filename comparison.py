@@ -88,7 +88,7 @@ def clean_set(mset):
         if '=' in elt:
             res.add(elt.split('=')[0].rstrip('_MODULE').strip())
         else:
-            res.add(elt.strip())
+            res.add(elt.rstrip('_MODULE').strip())
     return res
 
 
@@ -292,7 +292,7 @@ def main():
     for f in diff_c_d:
         content += '{}\n'.format(f)
 
-    with open('output.csv', 'w') as stream:
+    with open('output', 'w') as stream:
         stream.write(content)
 
 
