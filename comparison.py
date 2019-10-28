@@ -49,12 +49,15 @@ def csv_reader(filename, column=1, sep=',', comment='#'):
 
 
 def dimacs_reader(filename):
-    '''Reads a dimacs file and returns a set containing all the options
+    '''Reads a dimacs file and returns a dictionary containing all the
+    options like {feature: number} where number is the number of the
+    variable in dimacs format.
 
     :param filename: path (file included) to the dimacs file
     :type: str
-    :return: set of options
-    :rtype: set
+    :return: association {feature: number}
+    :rtype: dict
+
     '''
     res = dict()
     with open(filename, 'r') as stream:
@@ -86,9 +89,9 @@ def clean_set(mset):
     res = set()
     for elt in mset:
         if '=' in elt:
-            res.add(elt.split('=')[0].rstrip('_MODULE').strip())
+            res.add(elt.split('=')[0].split('_MODULE')[0].strip())
         else:
-            res.add(elt.rstrip('_MODULE').strip())
+            res.add(elt.split('_MODULE')[0].strip())
     return res
 
 
@@ -204,7 +207,7 @@ def diff(set1, set2):
 
 def opt_repr(cset, mset):
     '''Create a dictionary with the option and the representation
-"
+
     :param cset: a set of only option (clean)
     :type: set
     :param mset: a set of options (with added chars)
@@ -262,21 +265,21 @@ def main():
     print('=> {}'.format(csv == dimacs_cleaned))
     print('=> {} {}'.format(len(dimacs_cleaned), len(csv)))
     # modif = opt_repr(dimacs_cleaned, dimacs)
-    tmp1 = ''
-    lc = list(csv)
-    lc.sort()
-    for k in lc:
-        tmp1 += '{}\n'.format(k)
-    with open('csv_options', 'w') as stream:
-        stream.write(tmp1)
-    tmp2 = ''
-    ld = list(dimacs_cleaned)
-    ld.sort()
-    # print('"{}"\n'.format(ld[0]))
-    for k in ld:
-        tmp2 += '{}\n'.format(k)
-    with open('dimacs_options', 'w') as stream:
-        stream.write(tmp2)
+    # tmp1 = ''
+    # lc = list(csv)
+    # lc.sort()
+    # for k in lc:
+    #     tmp1 += '{}\n'.format(k)
+    # with open('csv_options', 'w') as stream:
+    #     stream.write(tmp1)
+    # tmp2 = ''
+    # ld = list(dimacs_cleaned)
+    # ld.sort()
+    # # print('"{}"\n'.format(ld[0]))
+    # for k in ld:
+    #     tmp2 += '{}\n'.format(k)
+    # with open('dimacs_options', 'w') as stream:
+    #     stream.write(tmp2)
         
     content = ''
     content += '# CSV FILE : {} features\n'.format(len(csv))
@@ -285,6 +288,7 @@ def main():
     content += '# DIMACS \\ CSV {} features\n'.format(len(diff_d_c))
     content += '\n'
     for f in diff_d_c:
+        # content += '{} {}\n'.format(dimacs[f], f)
         content += '{}\n'.format(f)
     content += '\n'
     content += '# CSV \\ DIMACS {} features\n'.format(len(diff_c_d))
