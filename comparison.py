@@ -85,7 +85,10 @@ def clean_set(mset):
     '''
     res = set()
     for elt in mset:
-        res.add(elt.split('=')[0].rstrip('_MODULE'))
+        if '=' in elt:
+            res.add(elt.split('=')[0].rstrip('_MODULE').strip())
+        else:
+            res.add(elt.strip())
     return res
 
 
@@ -199,16 +202,16 @@ def diff(set1, set2):
     return res
 
 
-def opt_repr(clean_set, mset):
+def opt_repr(cset, mset):
     '''Create a dictionary with the option and the representation
 "
-    :param clean_set: a set of only option (clean)
+    :param cset: a set of only option (clean)
     :type: set
     :param mset: a set of options (with added chars)
     :type: set
     '''
     dico = dict()
-    for elt in clean_set:
+    for elt in cset:
         for rep in mset:
             if str.startswith(rep, elt) and elt != rep:
                 try:
@@ -240,58 +243,57 @@ def main():
     #     stream.write(to_dot(opt_repr(clean_set(dimacs), dimacs),
     #                         csv_reader(args.csv), limit=50))
 
-    csv = set(csv_reader(args.csv, sep=','))
+    csv = csv_reader(args.csv, sep=',')
     dimacs = dimacs_reader(args.dimacs)
-    l = list(dimacs)
-    l.sort()
-    tmp = ''
-    for elt in l:
-        tmp += '{}\n'.format(elt)
-    with open('dimacs_tmp', 'w') as stream:
-        stream.write(tmp)
     
+    # l = list(dimacs)
+    # l.sort()
+    # tmp = ''
+    # for elt in l:
+    #     tmp += '{}\n'.format(elt)
+    # with open('dimacs_tmp', 'w') as stream:
+    #     stream.write(tmp)
     
-    
-    # dimacs_cleaned = clean_set(dimacs)
-    # print('CSV \\ DIMACS')
-    # diff_c_d = diff(csv, dimacs_cleaned)
-    # print('DIMACS \\ CSV')
-    # diff_d_c = diff(dimacs_cleaned, csv)
-    # print('=> {}'.format(csv == dimacs_cleaned))
-    # print('=> {} {}'.format(len(dimacs_cleaned), len(csv)))
+    dimacs_cleaned = clean_set(set(dimacs))
+    print('CSV \\ DIMACS')
+    diff_c_d = diff(csv, dimacs_cleaned)
+    print('DIMACS \\ CSV')
+    diff_d_c = diff(dimacs_cleaned, csv)
+    print('=> {}'.format(csv == dimacs_cleaned))
+    print('=> {} {}'.format(len(dimacs_cleaned), len(csv)))
     # modif = opt_repr(dimacs_cleaned, dimacs)
-    # tmp1 = ''
-    # lc = list(csv)
-    # lc.sort()
-    # for k in lc:
-    #     tmp1 += '{}\n'.format(k)
-    # with open('csv_options', 'w') as stream:
-    #     stream.write(tmp1)
-    # tmp2 = ''
-    # ld = list(dimacs_cleaned)
-    # ld.sort()
+    tmp1 = ''
+    lc = list(csv)
+    lc.sort()
+    for k in lc:
+        tmp1 += '{}\n'.format(k)
+    with open('csv_options', 'w') as stream:
+        stream.write(tmp1)
+    tmp2 = ''
+    ld = list(dimacs_cleaned)
+    ld.sort()
     # print('"{}"\n'.format(ld[0]))
-    # for k in ld:
-    #     tmp2 += '{}\n'.format(k)
-    # with open('dimacs_options', 'w') as stream:
-    #     stream.write(tmp2)
+    for k in ld:
+        tmp2 += '{}\n'.format(k)
+    with open('dimacs_options', 'w') as stream:
+        stream.write(tmp2)
         
-    # content = ''
-    # content += '# CSV FILE : {} features\n'.format(len(csv))
-    # content += '# DIMACS FILE : {} features\n'.format(len(dimacs_cleaned))
-    # content += '\n'
-    # content += '# DIMACS \\ CSV {} features\n'.format(len(diff_d_c))
-    # content += '\n'
-    # for f in diff_d_c:
-    #     content += '{}\n'.format(f)
-    # content += '\n'
-    # content += '# CSV \\ DIMACS {} features\n'.format(len(diff_c_d))
-    # content += '\n'
-    # for f in diff_c_d:
-    #     content += '{}\n'.format(f)
+    content = ''
+    content += '# CSV FILE : {} features\n'.format(len(csv))
+    content += '# DIMACS FILE : {} features\n'.format(len(dimacs_cleaned))
+    content += '\n'
+    content += '# DIMACS \\ CSV {} features\n'.format(len(diff_d_c))
+    content += '\n'
+    for f in diff_d_c:
+        content += '{}\n'.format(f)
+    content += '\n'
+    content += '# CSV \\ DIMACS {} features\n'.format(len(diff_c_d))
+    content += '\n'
+    for f in diff_c_d:
+        content += '{}\n'.format(f)
 
-    # with open('output.csv', 'w') as stream:
-    #     stream.write(content)
+    with open('output.csv', 'w') as stream:
+        stream.write(content)
 
 
 if __name__ == '__main__':
