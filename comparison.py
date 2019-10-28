@@ -41,9 +41,9 @@ def csv_reader(filename, column=1, sep=',', comment='#'):
             if not (line[0] == comment):
                 feature = line.split(sep)[col]
                 assert feature != '', 'CSV : feature empty'
-                ftype = line.split(sep)[col + 1].rstrip('\n')
+                ftype = line.split(sep)[col + 1].rstrip('\n').strip()
                 assert ftype != '', 'CSV : ftype empty'
-                res[feature] = ftype
+                res[feature] = ftype.strip()
             line = stream.readline()
     return res
 
@@ -56,14 +56,18 @@ def dimacs_reader(filename):
     :return: set of options
     :rtype: set
     '''
-    res = set()
+    res = dict()
     with open(filename, 'r') as stream:
         line = stream.readline()
         while line[0] == 'c':
             # c 666 FEATURE_NAME
-            feature = line.split(' ')[2].rstrip('\n')
-            assert feature != '', 'DIMACS : feature empty'
-            res.add(feature)
+            feature = line.split()[2].rstrip('\n').strip()
+            number = line.split()[1].strip()
+            res[feature] = int(number)
+            # print(feature)
+            # input()
+            # assert feature != '', 'DIMACS : feature empty'
+            # res.add(feature)
             line = stream.readline()
     return res
 
@@ -143,9 +147,9 @@ def build_type_dict_from_csv(filename, option_col=1, type_col=2,
                 type = line.split(sep)[tcol].rstrip('\n')
                 option = '"' + line.split(sep)[ocol] + '"'
                 try:
-                    dico[type].append(option)
+                    dico[type].append(option.strip())
                 except KeyError:
-                    dico[type] = [option]
+                    dico[type] = [option.strip()]
             line = stream.readline()
     return dico
 
@@ -187,15 +191,17 @@ def diff(set1, set2):
     :rtype: set
     '''
     res = set()
+    # l = list(set2)
     for elt in set1:
-        if elt not in set2:
+        if not (elt in set2):
             res.add(elt)
+            # print('"{}" {}'.format(elt, l.index(elt)))
     return res
 
 
 def opt_repr(clean_set, mset):
     '''Create a dictionary with the option and the representation
-
+"
     :param clean_set: a set of only option (clean)
     :type: set
     :param mset: a set of options (with added chars)
@@ -221,9 +227,6 @@ def main():
 
     '''
     parser = argparse.ArgumentParser()
-    parser.add_argument('--clean',
-                        help='clean the name in the dimacs file',
-                        action='store_true')
     parser.add_argument('-dimacs',
                         help='path (including the file) to the dimacs file',
                         required=True)
@@ -239,33 +242,56 @@ def main():
 
     csv = set(csv_reader(args.csv, sep=','))
     dimacs = dimacs_reader(args.dimacs)
-    dimacs_cleaned = clean_set(dimacs)
-    diff_c_d = diff(csv, dimacs_cleaned)
-    diff_d_c = diff(dimacs_cleaned, csv)
-
+    l = list(dimacs)
+    l.sort()
+    tmp = ''
+    for elt in l:
+        tmp += '{}\n'.format(elt)
+    with open('dimacs_tmp', 'w') as stream:
+        stream.write(tmp)
+    
+    
+    
+    # dimacs_cleaned = clean_set(dimacs)
+    # print('CSV \\ DIMACS')
+    # diff_c_d = diff(csv, dimacs_cleaned)
+    # print('DIMACS \\ CSV')
+    # diff_d_c = diff(dimacs_cleaned, csv)
+    # print('=> {}'.format(csv == dimacs_cleaned))
+    # print('=> {} {}'.format(len(dimacs_cleaned), len(csv)))
     # modif = opt_repr(dimacs_cleaned, dimacs)
+    # tmp1 = ''
+    # lc = list(csv)
+    # lc.sort()
+    # for k in lc:
+    #     tmp1 += '{}\n'.format(k)
+    # with open('csv_options', 'w') as stream:
+    #     stream.write(tmp1)
+    # tmp2 = ''
+    # ld = list(dimacs_cleaned)
+    # ld.sort()
+    # print('"{}"\n'.format(ld[0]))
+    # for k in ld:
+    #     tmp2 += '{}\n'.format(k)
+    # with open('dimacs_options', 'w') as stream:
+    #     stream.write(tmp2)
+        
+    # content = ''
+    # content += '# CSV FILE : {} features\n'.format(len(csv))
+    # content += '# DIMACS FILE : {} features\n'.format(len(dimacs_cleaned))
+    # content += '\n'
+    # content += '# DIMACS \\ CSV {} features\n'.format(len(diff_d_c))
+    # content += '\n'
+    # for f in diff_d_c:
+    #     content += '{}\n'.format(f)
+    # content += '\n'
+    # content += '# CSV \\ DIMACS {} features\n'.format(len(diff_c_d))
+    # content += '\n'
+    # for f in diff_c_d:
+    #     content += '{}\n'.format(f)
 
-    content = ''
-    content += '# CSV FILE : {} features\n'.format(len(csv))
-    content += '# DIMACS FILE : {} features\n'.format(len(dimacs_cleaned))
-    content += '\n'
-    content += '# DIMACS \\ CSV {} features\n'.format(len(diff_d_c))
-    content += '\n'
-    for f in diff_d_c:
-        content += '{}\n'.format(f)
-    content += '\n'
-    content += '# CSV \\ DIMACS {} features\n'.format(len(diff_c_d))
-    content += '\n'
-    for f in diff_c_d:
-        content += '{}\n'.format(f)
-
-    outname = ''
-    if args.clean:
-        outname = 'output-clean.csv'
-    else:
-        outname = 'output.csv'
-    with open(outname, 'w') as stream:
-        stream.write(content)
+    # with open('output.csv', 'w') as stream:
+    #     stream.write(content)
 
 
 if __name__ == '__main__':
