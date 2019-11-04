@@ -1,12 +1,11 @@
 
 class CSVFile:
 
-    def __init__(self, filename, column=1, sep=',', comment='#', op_column=2):
+    def __init__(self, filename, column=1, sep=',', comment='#'):
         self.__features = dict()
         self.__separator = sep
         self.__comment = comment
         self.__column = column - 1
-        self.__op_column = op_column - 1
         with open(filename, 'r') as stream:
             stream.readline()       # first line (title)
             line = stream.readline()
@@ -31,6 +30,7 @@ class CSVFile:
     def getTypeDict(self):
         if not self.__type_dict_built:
             self.__buildTypeDict()
+            self.__type_dict_built = False
 
     def __buildTypeDict(self):
         self.__type_dict = dict()
