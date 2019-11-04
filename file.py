@@ -30,7 +30,7 @@ class CSVFile:
     def getTypeDict(self):
         if not self.__type_dict_built:
             self.__buildTypeDict()
-            self.__type_dict_built = False
+            self.__type_dict_built = True
 
     def __buildTypeDict(self):
         self.__type_dict = dict()
