@@ -14,214 +14,75 @@ __email__ = "georges-aaron.randrianaina@ens-rennes.fr"
 
 # To parse the command line argument
 import argparse
+import file
+
+UNDEFINED = 'UNDEFINED'
 
 
-def csv_reader(filename, column=1, sep=',', comment='#'):
-    '''Reads a csv file of options and return a dictionary which the
-    keys are options and values the type of the option
-
-    :param filename: path (file included) to the csv file
-    :type: str
-    :param column: (optional) number of the column containing options
-    (default is 1.)
-    :type: int
-    :param sep: (optional) separator used in the file (default is ',')
-    :type: str
-    :param comment: (optional) character for comment (default is '#')
-    :type: str
-    :return: a table like {option : type} association
-    :rtype: dict
-    '''
+def prepare(feat_repr, feat_type):
     res = dict()
-    col = column - 1
-    with open(filename, 'r') as stream:
-        stream.readline()       # first line (title)
-        line = stream.readline()
-        while line:
-            if not (line[0] == comment):
-                feature = line.split(sep)[col]
-                assert feature != '', 'CSV : feature empty'
-                ftype = line.split(sep)[col + 1].rstrip('\n').strip()
-                assert ftype != '', 'CSV : ftype empty'
-                res[feature] = ftype.strip()
-            line = stream.readline()
-    return res
-
-
-def dimacs_reader(filename):
-    '''Reads a dimacs file and returns a dictionary containing all the
-    options like {feature: number} where number is the number of the
-    variable in dimacs format.
-
-    :param filename: path (file included) to the dimacs file
-    :type: str
-    :return: association {feature: number}
-    :rtype: dict
-
-    '''
-    res = dict()
-    with open(filename, 'r') as stream:
-        line = stream.readline()
-        while line[0] == 'c':
-            # c 666 FEATURE_NAME
-            feature = line.split()[2].rstrip('\n').strip()
-            number = line.split()[1].strip()
-            res[feature] = int(number)
-            # print(feature)
-            # input()
-            # assert feature != '', 'DIMACS : feature empty'
-            # res.add(feature)
-            line = stream.readline()
-    return res
-
-
-def clean_set(mset):
-    '''Cleans a set of feature
-
-    For instance :
-    "MY_OPTION=1" and "MY_OPTION=" are considered one option
-    so it will add only one option MY_OPTION
-    :param mset: a set of options
-    :type: set
-    :return: a set of real options
-    :rtype: set
-    '''
-    res = set()
-    for elt in mset:
-        if '=' in elt:
-            res.add(elt.split('=')[0].split('_MODULE')[0].strip())
+    for feat in feat_repr:
+        if feat in feat_type:
+            if feat_type[feat] in res:
+                res[feat_type[feat]][feat] = feat_repr[feat]
+            else:
+                res[feat_type[feat]] = {feat: feat_repr[feat]}
         else:
-            res.add(elt.split('_MODULE')[0].strip())
+            if UNDEFINED in res:
+                res[UNDEFINED][feat] = feat_repr[feat]
+            else:
+                res[UNDEFINED] = {feat: feat_repr[feat]}
     return res
 
 
-def to_dot(dico, type_dico, limit=10):
-    '''Write the dotviz code to build a tree for the dictionary
-    :param dico: a dictionary like {option: [reprentation+]}
-    :type: dict
-    :param type_dico: a dictionary like {option : type}
-    :type: dict
-    :param limit: number of children of the tree
-    :type: int
-    :return: a string containing the dotviz code
-    :rtype: string
-    '''
-    res = 'graph {\n'
-    dico_length = len(dico)
-    tmp_limit = limit
-    if dico_length < limit:
-        tmp_limit = dico_length
-    types = set()
-    for key in list(dico)[:tmp_limit]:
-        if key in type_dico:
-            if not(type_dico[key] in types):
-                res += 'ROOT -- "{}"\n'.format(type_dico[key])
-                types.add(type_dico[key])
-            res += '"{}" -- "{}"\n'.format(type_dico[key], key)
-        else:
-            if not('UNKNOWN' in types):
-                res += 'ROOT -- UNKNOWN\n'
-                types.add('UNKNOWN')
-            res += 'UNKNOWN -- "{}"\n'.format(key)
-        if len(dico[key]) > limit:
-            for i in range(limit):
-                res += '"{}" -- "{}"\n'.format(key, dico[key][i])
-        else:
-            for elt in dico[key]:
-                res += '"{}" -- "{}"\n'.format(key, elt)
-    res += '}'
-    return res
+def to_dot(dico):
+    for t in dico:
+        res = 'graph {\n'
+        for f in dico[t]:
+            res += '"{}" -- "{}"\n'.format(t, f)
+            for r in dico[t][f]:
+                res += '"{}" -- "{}"\n'.format(f, r)
+        res += '}'
+        with open(t, 'w') as stream:
+            stream.write(res)
 
 
-def build_type_dict_from_csv(filename, option_col=1, type_col=2,
-                             sep=',', comment='#'):
-    '''Build a dictionary from a csv file like
-    {'type': []}
-    :param filename: name of the csv file
-    :type: string
-    :return: dictionary
-    :rtype: dict
-    '''
-    ocol = option_col - 1
-    tcol = type_col - 1
-    dico = dict()
-    with open(filename, 'r') as stream:
-        stream.readline()       # first line (title)
-        line = stream.readline()
-        while line:
-            if not (line[0] == comment):
-                type = line.split(sep)[tcol].rstrip('\n')
-                option = '"' + line.split(sep)[ocol] + '"'
-                try:
-                    dico[type].append(option.strip())
-                except KeyError:
-                    dico[type] = [option.strip()]
-            line = stream.readline()
-    return dico
-
-
-def build_option_type_dict(filename, option_col=1, type_col=2,
-                           sep=',', comment='#'):
-    '''Build a dictionary from a csv file like
-    {'type': []}
-    :param filename: name of the csv file
-    :type: string
-    :return: dictionary
-    :rtype: dict
-    '''
-    ocol = option_col - 1
-    tcol = type_col - 1
-    dico = dict()
-    with open(filename, 'r') as stream:
-        stream.readline()       # first line (title)
-        line = stream.readline()
-        while line:
-            if not (line[0] == comment):
-                type = line.split(sep)[tcol].rstrip('\n')
-                option = '"' + line.split(sep)[ocol] + '"'
-                try:
-                    dico[type].append(option)
-                except KeyError:
-                    dico[type] = [option]
-            line = stream.readline()
-    return dico
-
-
-def diff(set1, set2):
-    '''Gives the set of element in set1 but not in set2
-    :param set1: a set
-    :type: set
-    :param set2: a set
-    :type: set
-    :return: a set
-    :rtype: set
-    '''
-    res = set()
-    # l = list(set2)
-    for elt in set1:
-        if not (elt in set2):
-            res.add(elt)
-            # print('"{}" {}'.format(elt, l.index(elt)))
-    return res
-
-
-def opt_repr(cset, mset):
-    '''Create a dictionary with the option and the representation
-
-    :param cset: a set of only option (clean)
-    :type: set
-    :param mset: a set of options (with added chars)
-    :type: set
-    '''
-    dico = dict()
-    for elt in cset:
-        for rep in mset:
-            if str.startswith(rep, elt) and elt != rep:
-                try:
-                    dico[elt].append(rep)
-                except KeyError:
-                    dico[elt] = [rep]
-    return dico
+# def to_dot(dico, type_dico, limit=10):
+#     '''Write the dotviz code to build a tree for the dictionary
+#     :param dico: a dictionary like {option: [reprentation+]}
+#     :type: dict
+#     :param type_dico: a dictionary like {option : type}
+#     :type: dict
+#     :param limit: number of children of the tree
+#     :type: int
+#     :return: a string containing the dotviz code
+#     :rtype: string
+#     '''
+#     res = 'graph {\n'
+#     dico_length = len(dico)
+#     tmp_limit = limit
+#     if dico_length < limit:
+#         tmp_limit = dico_length
+#     types = set()
+#     for key in list(dico)[:tmp_limit]:
+#         if key in type_dico:
+#             if not(type_dico[key] in types):
+#                 res += 'ROOT -- "{}"\n'.format(type_dico[key])
+#                 types.add(type_dico[key])
+#             res += '"{}" -- "{}"\n'.format(type_dico[key], key)
+#         else:
+#             if not('UNKNOWN' in types):
+#                 res += 'ROOT -- UNKNOWN\n'
+#                 types.add('UNKNOWN')
+#             res += 'UNKNOWN -- "{}"\n'.format(key)
+#         if len(dico[key]) > limit:
+#             for i in range(limit):
+#                 res += '"{}" -- "{}"\n'.format(key, dico[key][i])
+#         else:
+#             for elt in dico[key]:
+#                 res += '"{}" -- "{}"\n'.format(key, elt)
+#     res += '}'
+#     return res
 
 
 def main():
@@ -241,63 +102,44 @@ def main():
                         required=True)
     args = parser.parse_args()
 
-    # dimacs = dimacs_reader(args.dimacs)
-    # with open('tree.dot', 'w') as stream:
-    #     stream.write(to_dot(opt_repr(clean_set(dimacs), dimacs),
-    #                         csv_reader(args.csv), limit=50))
+    csv = file.CSVFile(args.csv)
+    dimacs = file.DimacsFile(args.dimacs)
 
-    csv = csv_reader(args.csv, sep=',')
-    dimacs = dimacs_reader(args.dimacs)
-    
-    # l = list(dimacs)
-    # l.sort()
-    # tmp = ''
-    # for elt in l:
-    #     tmp += '{}\n'.format(elt)
-    # with open('dimacs_tmp', 'w') as stream:
-    #     stream.write(tmp)
-    
-    dimacs_cleaned = clean_set(set(dimacs))
-    print('CSV \\ DIMACS')
-    diff_c_d = diff(csv, dimacs_cleaned)
-    print('DIMACS \\ CSV')
-    diff_d_c = diff(dimacs_cleaned, csv)
-    print('=> {}'.format(csv == dimacs_cleaned))
-    print('=> {} {}'.format(len(dimacs_cleaned), len(csv)))
-    # modif = opt_repr(dimacs_cleaned, dimacs)
-    # tmp1 = ''
-    # lc = list(csv)
-    # lc.sort()
-    # for k in lc:
-    #     tmp1 += '{}\n'.format(k)
-    # with open('csv_options', 'w') as stream:
-    #     stream.write(tmp1)
-    # tmp2 = ''
-    # ld = list(dimacs_cleaned)
-    # ld.sort()
-    # # print('"{}"\n'.format(ld[0]))
-    # for k in ld:
-    #     tmp2 += '{}\n'.format(k)
-    # with open('dimacs_options', 'w') as stream:
-    #     stream.write(tmp2)
-        
-    content = ''
-    content += '# CSV FILE : {} features\n'.format(len(csv))
-    content += '# DIMACS FILE : {} features\n'.format(len(dimacs_cleaned))
-    content += '\n'
-    content += '# DIMACS \\ CSV {} features\n'.format(len(diff_d_c))
-    content += '\n'
-    for f in diff_d_c:
-        # content += '{} {}\n'.format(dimacs[f], f)
-        content += '{}\n'.format(f)
-    content += '\n'
-    content += '# CSV \\ DIMACS {} features\n'.format(len(diff_c_d))
-    content += '\n'
-    for f in diff_c_d:
-        content += '{}\n'.format(f)
+    result = """CSV : {}
+Nb features    : {:10}
+Nb types       : {:10}
+
+================================================================================
+
+DIMACS : {}
+Nb features            : {:10}
+Nb clauses             : {:10}
+Nb undefined variables : {:10} ({}%)
+Total variables        : {:10}
+
+================================================================================
+
+""".format(csv.getFileName(), csv.getNbFeatures(), csv.getNbTypes(),
+           dimacs.getFileName(), dimacs.getRealNbFeatures(),
+           dimacs.getNbClauses(),
+           dimacs.getNbVariables() - dimacs.getRealNbFeatures(),
+           (dimacs.getNbVariables() - dimacs.getRealNbFeatures())
+           * 100 // dimacs.getNbVariables(), dimacs.getNbVariables())
+
+    dimacs_minus_csv = dimacs.diff(csv.getFeaturesSet())
+    csv_minus_dimacs = csv.diff(dimacs.getRealFeaturesSet())
+    difference = "DIMACS \\ CSV : {}\n".format(len(dimacs_minus_csv))
+    for elt in dimacs_minus_csv:
+        difference += "{}\n".format(elt)
+    difference += "\n"
+    difference += "CSV \\ DIMACS : {}\n".format(len(csv_minus_dimacs))
+    for elt in csv_minus_dimacs:
+        difference += "{}\n".format(elt)
 
     with open('output', 'w') as stream:
-        stream.write(content)
+        stream.write(result + difference)
+
+    # to_dot(prepare(dimacs.getNameVariationDict(), csv.getFeatures()))
 
 
 if __name__ == '__main__':
