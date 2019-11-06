@@ -148,13 +148,17 @@ class DimacsFile:
 
     def __buildNameVariationDiff(self):
         self.__name_variation_dict = dict()
-        for feat in self.__features_clean_set:
+        features_list_sorted = sorted(list(self.__features_clean_set),
+                                      key=len, reverse=True)
+        added = set()
+        for feat in features_list_sorted:
             for rep in self.__features:
-                if str.startswith(rep, feat):
+                if rep not in added and str.startswith(rep, feat):
                     try:
                         self.__name_variation_dict[feat].add(rep)
                     except KeyError:
                         self.__name_variation_dict[feat] = {rep}
+                    added.add(rep)
 
     def getNameVariationDict(self):
         if self.__name_variation_dict is None:
