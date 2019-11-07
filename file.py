@@ -1,3 +1,5 @@
+import os
+
 
 class CSVFile:
 
@@ -94,26 +96,6 @@ class DimacsFile:
                 mlist = list(map(abs, mlist))
                 for k in mlist:
                     self.__variables.add(k)
-        #
-        # with open(filename, 'r') as stream:
-        #     line = stream.readline()
-        #     while line:
-        #         if line[0] == 'c':
-        #             # c 666 FEATURE_NAME
-        #             feature = line.split()[2].rstrip('\n').strip()
-        #             number = int(line.split()[1].strip())
-        #             self.__features[feature] = number
-        #             self.__variables.add(number)
-        #         elif line[0] == 'p':
-        #             stream.readline()
-        #         else:
-        #             line = stream.readline()
-        #             mlist = line.split()
-        #             mlist = list(map(mlist, int))
-        #             mlist = list(map(mlist, abs))
-        #             for k in mlist:
-        #                 self.__variables.add(k)
-        #
         self.__features_clean_set = self.__cleanSet(set(self.__features))
         self.__nb_features = len(self.__features_clean_set)
         self.__name_variation_dict = None
@@ -137,13 +119,16 @@ class DimacsFile:
     def getVariableOf(self, feature):
         return self.__features[feature]
 
+    def __cleanName(self, name):
+        if '=' in name:
+            return name.split('=')[0].split('_MODULE')[0].strip()
+        else:
+            return name.split('_MODULE')[0].strip()
+
     def __cleanSet(self, mset):
         res = set()
         for elt in mset:
-            if '=' in elt:
-                res.add(elt.split('=')[0].split('_MODULE')[0].strip())
-            else:
-                res.add(elt.split('_MODULE')[0].strip())
+            res.add(self.__cleanName(elt))
         return res
 
     def __buildNameVariationDiff(self):
@@ -171,3 +156,15 @@ class DimacsFile:
             if not (elt in other):
                 res.add(elt)
         return res
+
+    def getNameTreeOf(self, feature):
+        # from PIL import Image
+        res = 'graph {\n'
+        for elt in self.getNameVariationDict()[feature]:
+            res += '"{}" -- "{} "\n'.format(feature, elt)
+        res += '}'
+        with open('{}.dot'.format(feature), 'w') as stream:
+            stream.write(res)
+        os.system('dot -T png -O {}.dot'.format(feature))
+        # Image.open('{}.dot'.format(feature)).show()
+        os.system('eom {}.dot.png'.format(feature))
