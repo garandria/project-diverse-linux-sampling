@@ -1,5 +1,8 @@
 import os
 
+DOT_DIR = 'dot'
+IMG_DIR = 'img'
+
 
 class CSVFile:
 
@@ -163,8 +166,8 @@ class DimacsFile:
         for elt in self.getNameVariationDict()[feature]:
             res += '"{}" -- "{} "\n'.format(feature, elt)
         res += '}'
-        with open('{}.dot'.format(feature), 'w') as stream:
+        with open('{}/{}.dot'.format(DOT_DIR, feature), 'w') as stream:
             stream.write(res)
-        os.system('dot -T png -O {}.dot'.format(feature))
+        os.system('dot -T png -O {}/{}.dot'.format(DOT_DIR, feature))
         # Image.open('{}.dot'.format(feature)).show()
-        os.system('eom {}.dot.png'.format(feature))
+        os.system('eom {}/{}.dot.png'.format(IMG_DIR, feature))
