@@ -43,7 +43,7 @@ def to_dot(dico):
             for r in dico[t][f]:
                 res += '"{}" -- "{}"\n'.format(f, r)
         res += '}'
-        with open(t, 'w') as stream:
+        with open('dot/{}'.format(t), 'w') as stream:
             stream.write(res)
 
 
@@ -104,7 +104,6 @@ def main():
 
     csv = file.CSVFile(args.csv)
     dimacs = file.DimacsFile(args.dimacs)
-
     result = """CSV : {}
 Nb features    : {:10}
 Nb types       : {:10}
@@ -119,27 +118,48 @@ Total variables        : {:10}
 
 ================================================================================
 
+Nb features diff : {}
+
+================================================================================
+
 """.format(csv.getFileName(), csv.getNbFeatures(), csv.getNbTypes(),
            dimacs.getFileName(), dimacs.getRealNbFeatures(),
            dimacs.getNbClauses(),
            dimacs.getNbVariables() - dimacs.getRealNbFeatures(),
            (dimacs.getNbVariables() - dimacs.getRealNbFeatures())
-           * 100 // dimacs.getNbVariables(), dimacs.getNbVariables())
+           * 100 // dimacs.getNbVariables(), dimacs.getNbVariables(),
+           abs(csv.getNbFeatures() - dimacs.getRealNbFeatures()))
 
     dimacs_minus_csv = dimacs.diff(csv.getFeaturesSet())
     csv_minus_dimacs = csv.diff(dimacs.getRealFeaturesSet())
     difference = "DIMACS \\ CSV : {}\n".format(len(dimacs_minus_csv))
     for elt in dimacs_minus_csv:
         difference += "{}\n".format(elt)
+    difference += """
+================================================================================
+"""
     difference += "\n"
     difference += "CSV \\ DIMACS : {}\n".format(len(csv_minus_dimacs))
     for elt in csv_minus_dimacs:
         difference += "{}\n".format(elt)
-
-    with open('output', 'w') as stream:
+    difference += """
+================================================================================
+"""
+    filename = 'output' + csv.getFileName()\
+                             .split('/')[-1]\
+                             .split('-')[-1]\
+                             .strip('.csv')
+    with open(filename, 'w') as stream:
         stream.write(result + difference)
+    print("=> File written : {}".format(filename))
 
+    # dimacs_features = ''
+    # for i in dimacs.getRealFeaturesSet():
+    #     dimacs_features += '{}\n'.format(i)
+    # with open('dimacs_features', 'w') as stream:
+    #     stream.write(dimacs_features)
     # to_dot(prepare(dimacs.getNameVariationDict(), csv.getFeatures()))
+    # to_dot({'MTD': dimacs.getNameVariationDict()['MTD']})
 
 
 if __name__ == '__main__':
