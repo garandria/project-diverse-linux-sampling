@@ -99,7 +99,8 @@ class DimacsFile:
                 mlist = list(map(abs, mlist))
                 for k in mlist:
                     self.__variables.add(k)
-        self.__features_clean_set = self.__cleanSet(set(self.__features))
+        self.__features_set = set(self.__features)
+        self.__features_clean_set = self.__cleanSet(self.__features_set)
         self.__nb_features = len(self.__features_clean_set)
         self.__name_variation_dict = None
         assert self.__nb_variables == len(self.__variables)
@@ -118,6 +119,9 @@ class DimacsFile:
 
     def getRealFeaturesSet(self):
         return self.__features_clean_set
+
+    def getFeaturesSet(self):
+        return self.__features_set
 
     def getVariableOf(self, feature):
         return self.__features[feature]
@@ -171,3 +175,9 @@ class DimacsFile:
         os.system('dot -T png -O {}/{}.dot'.format(DOT_DIR, feature))
         # Image.open('{}.dot'.format(feature)).show()
         os.system('eom {}/{}.dot.png'.format(IMG_DIR, feature))
+
+    def getNamesOf(self, name):
+        if self.__name_variation_dict is None:
+            self.getNameVariationDict()
+        else:
+            return self.getNameTreeOf()[name]
