@@ -160,6 +160,7 @@ class DimacsFile:
 
     @staticmethod
     def __my_contains(prefix, word):
+        ''' Checking the prefix '''
         if word.startswith(prefix):
             if prefix[-3:] == "MOD":
                 return not word[len(prefix):].startswith("ULE")
