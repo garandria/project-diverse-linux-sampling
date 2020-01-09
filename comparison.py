@@ -141,7 +141,7 @@ Nb features diff : {}
     difference += "\n"
     difference += "CSV \\ DIMACS : {}\n".format(len(csv_minus_dimacs))
     for elt in csv_minus_dimacs:
-        difference += "{}\n".format(elt)
+        difference += "{}, {}\n".format(elt, csv.getType(elt))
     difference += """
 ================================================================================
 """
