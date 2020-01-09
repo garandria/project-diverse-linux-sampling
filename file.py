@@ -1,25 +1,35 @@
+'''This file contains classes to process CSV & dimacs files of linux
+   features
+
+For an example of dimacs file, see :
+https://github.com/PettTo/Feature-Model-History-of-Linux/tree/master/2017/2017-09-11T13_10_57-07_00
+
+For an example of a csv file with all options, see :
+https://github.com/TuxML/Kanalyser/blob/master/alloptions-x64-v4.15.csv
+
+'''
 import os
+
 
 DOT_DIR = 'dot'
 IMG_DIR = 'img'
 
 
 class CSVFile:
+    """Class that takes info from csv file of features"""
 
     def __init__(self, filename, column=1, sep=',', comment='#'):
         self.__filename = filename
         self.__features = dict()
-        self.__separator = sep
-        self.__comment = comment
-        self.__column = column - 1
+        column -= 1
         with open(filename, 'r') as stream:
             stream.readline()       # first line (title)
             line = stream.readline()
             while line:
-                if not (line[0] == comment):
-                    feature = line.split(self.__separator)[self.__column]
+                if not line[0] == comment:
+                    feature = line.split(sep)[column]
                     # assert feature != '', 'CSV : feature empty'
-                    ftype = line.split(self.__separator)[self.__column + 1]\
+                    ftype = line.split(sep)[column + 1]\
                                 .rstrip('\n')\
                                 .strip()
                     # assert ftype != '', 'CSV : ftype empty'
@@ -73,6 +83,7 @@ class CSVFile:
 
 
 class DimacsFile:
+    """ Class for dimacs files"""
 
     def __init__(self, filename):
         self.__filename = filename
@@ -126,17 +137,33 @@ class DimacsFile:
     def getVariableOf(self, feature):
         return self.__features[feature]
 
+    # def __cleanName(self, name):
+    #     if '=' in name:
+    #         return name.split('=')[0].split('_MODULE')[0].strip()
+    #     else:
+    #         return name.split('_MODULE')[0].strip()
+
     def __cleanName(self, name):
         if '=' in name:
             return name.split('=')[0].split('_MODULE')[0].strip()
         else:
-            return name.split('_MODULE')[0].strip()
+            if '_MODULE' in name:
+                return name[:-7].strip()
+            else:
+                return name.strip()
 
     def __cleanSet(self, mset):
         res = set()
         for elt in mset:
             res.add(self.__cleanName(elt))
         return res
+
+    @staticmethod
+    def __my_contains(prefix, word):
+        if word.startswith(prefix):
+            if prefix[-3:] == "MOD":
+                return not word[len(prefix):].startswith("ULE")
+            return True
 
     def __buildNameVariationDiff(self):
         self.__name_variation_dict = dict()
@@ -145,7 +172,8 @@ class DimacsFile:
         added = set()
         for feat in features_list_sorted:
             for rep in self.__features:
-                if rep not in added and str.startswith(rep, feat):
+                if rep not in added and DimacsFile.__my_contains(feat, rep):
+                        # str.startswith(rep, feat):
                     try:
                         self.__name_variation_dict[feat].add(rep)
                     except KeyError:
