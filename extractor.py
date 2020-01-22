@@ -20,7 +20,7 @@ def main():
                         help="dimacs file name")
     parser.add_argument("--csv", type=str, default=CSV, help="all options csv file")
     parser.add_argument("-n", type=int, default=20,
-                        help="no of iteration")
+                        help="nb of iteration")
     args = parser.parse_args()
     out = "name,nb_yes,nb_mod,bool,tristate,both,last_clause,in\n"
     for i in range(args.n):
