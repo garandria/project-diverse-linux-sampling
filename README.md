@@ -75,14 +75,15 @@ python extractor.py -h
 to have this :
 ```
 usage: extractor.py [-h] [--cdir CDIR] [--dimacs DIMACS] [--csv CSV] [-n N]
+                    [--verbose]
 
 optional arguments:
   -h, --help       show this help message and exit
   --cdir CDIR      local directory of linux source code (to launch the Makefile)
   --dimacs DIMACS  dimacs file name
   --csv CSV        all options csv file
-  -n N             no of iteration
-
+  -n N             nb of iteration
+  --verbose, -v
 ```
 
 The _nb of iteration_ parameter is __required__. If the other
@@ -95,8 +96,9 @@ If you want to test only with few "type" of configuration
 the source code :p.
 
 This program will show you what is happening during the whole process
-while writing a csv file named `extractor_out.csv`. If you want to
-keep the trace, just redirect the output into a like so:
+(with `--verbose`)while writing a csv file named
+`extractor_out.csv`. If you want to keep the trace, just redirect the
+output into a like so:
 ```
 python extractor.py --cdir linux-kernel/path --dimacs dimacs/file --csv csv/file >> my_trace
 ```
