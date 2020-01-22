@@ -9,6 +9,8 @@ https://github.com/TuxML/Kanalyser/blob/master/alloptions-x64-v4.15.csv
 
 '''
 import os
+from pysat.formula import CNF
+from pysat.solvers import Solver
 
 
 DOT_DIR = 'dot'
@@ -210,3 +212,170 @@ class DimacsFile:
             self.getNameVariationDict()
         else:
             return self.getNameTreeOf()[name]
+
+
+class Checker:
+    """ """
+
+    def __init__(self, dimacs_file, csv_file):
+        self.__dimacs = DimacsFile(dimacs_file)
+        self.__csv = CSVFile(csv_file)
+        self.__cnf = CNF(from_file=dimacs_file)
+        self.__formula = Solver(bootstrap_with=self.__cnf.clauses)
+        assert self.__formula.solve() is True, "initial formula is UNSAT"
+        self.__config_d = None
+
+    def clean(self):
+        self.__formula = Solver(bootstrap_with=self.__cnf.clauses)
+        assert self.__formula.solve() is True, "initial formula is UNSAT"
+
+
+    def set_dot_config_file(self, filename):
+        self.__config_d = Checker.__read_file(filename)
+
+    def check_tristate(self, dot_config_file=None):
+        if dot_config_file is not None:
+            self.set_dot_config_file(dot_config_file)
+        print("=> ADDING FEATURES FROM .CONFIG FILE [TRISTATE]")
+        print("-----------------------------------------------")
+        for feature in self.__config_d:
+            if feature in self.__dimacs.getFeaturesSet():
+                if feature in self.__csv.getFeaturesSet():
+                    if self.__csv.getType(feature) == "TRISTATE":
+                        feat_mod = "{}_MODULE".format(feature)
+                        var_for_name = self.__dimacs.getVariableOf(feature)
+                        var_for_module = self.__dimacs.getVariableOf(feat_mod)
+                        if self.__config_d[feature] == 'y':
+                            print("+ Adding clause: {}({})"
+                                  .format(feature, var_for_name))
+                            if not self.__formula\
+                                       .add_clause([var_for_name],
+                                                   no_return=False):
+                                print("== UNSAT")
+                                return {"return" : False,
+                                        "last_clause" : feature,
+                                        "In" : True}
+                            print("+ Adding clause: {}({})"
+                                  .format(feat_mod, var_for_module))
+                            if not self.__formula\
+                                       .add_clause([-var_for_module],
+                                                   no_return=False):
+                                print("== UNSAT")
+                                return {"return" : False,
+                                        "last_clause" : feat_mod,
+                                        "In" : True}
+                        elif self.__config_d[feature] == 'm':
+                            print("+ Adding clause: {}({})"
+                                  .format(feature, var_for_name))
+                            if not self.__formula\
+                                       .add_clause([var_for_name],
+                                                   no_return=False):
+                                print("== UNSAT")
+                                return {"return" : False,
+                                        "last_clause" : feature,
+                                        "In" : True}
+                            print("+ Adding clause: {}({})"
+                                  .format(feat_mod, var_for_module))
+                            if not self.__formula\
+                                       .add_clause([var_for_module],
+                                                   no_return=False):
+                                print("== UNSAT")
+                                return {"return" : False,
+                                        "last_clause" : feat_mod,
+                                        "In" : True}
+            #     else:
+            #         print("/!\\ {} not in CSV".format(feature))
+            # else:
+            #     print("/!\\ {} not in DIMACS".format(feature))
+        print()
+        print("=> ADDING FEATURES THAT ARE NOT IN THE .CONFIG [TRISTATE]")
+        print("---------------------------------------------------------")
+        for feature in self.__csv.getFeaturesSet():
+            if feature not in set(self.__config_d)\
+               and feature in self.__dimacs.getFeaturesSet():
+                if self.__csv.getType(feature) == "TRISTATE":
+                    feat_mod = "{}_MODULE".format(feature)
+                    var_for_name = self.__dimacs.getVariableOf(feature)
+                    var_for_module = self.__dimacs.getVariableOf(feat_mod)
+                    print("+ Adding clause: {} ({})"
+                          .format(feature, -var_for_name))
+                    if not self.__formula\
+                               .add_clause([-var_for_name], no_return=False):
+                        print("== UNSAT")
+                        return {"return" : False,
+                                "last_clause" : feature,
+                                "In" : False}
+                    print("+ Adding clause: {} ({})"
+                          .format(feat_mod, -var_for_module))
+                    if not self.__formula\
+                               .add_clause([-var_for_module], no_return=False):
+                        print("== UNSAT")
+                        return {"return" : False,
+                                "last_clause" : feat_mod,
+                                "In" : False}
+        print("== SAT")
+        return {"return" : True,
+                "last_clause" : None,
+                "In" : None}
+
+    def check_bool(self, dot_config_file=None):
+        if dot_config_file is not None:
+            self.set_dot_config_file(dot_config_file)
+        print("=> ADDING FEATURES FROM .CONFIG FILE [BOOL]")
+        print("-----------------------------------------------")
+        for feature in self.__config_d:
+            if feature in self.__dimacs.getFeaturesSet():
+                if feature in self.__csv.getFeaturesSet():
+                    if self.__csv.getType(feature) == "BOOL":
+                        var_name = self.__dimacs.getVariableOf(feature)
+                        print("+ Adding clause: {} ({})"
+                              .format(feature, var_name))
+                        if not self.__formula\
+                                   .add_clause([var_name], no_return=False):
+                            print("== UNSAT")
+                            return {"return" : False,
+                                    "last_clause" : feature,
+                                    "In" : True}
+            #     else:
+            #         print("/!\\ {} not in CSV".format(feature))
+            # else:
+            #     print("/!\\ {} not in DIMACS".format(feature))
+        print()
+        print("=> ADDING FEATURES THAT ARE NOT IN THE .CONFIG [BOOL]")
+        print("-----------------------------------------------------")
+        for feature in self.__csv.getFeaturesSet():
+            if feature not in set(self.__config_d)\
+               and feature in self.__dimacs.getFeaturesSet():
+                if self.__csv.getType(feature) == "BOOL":
+                    var_name = self.__dimacs.getVariableOf(feature)
+                    print("+ Adding clause: {} ({})".format(feature, -var_name))
+                    if not self.__formula\
+                           .add_clause([-var_name], no_return=False):
+                        print("== UNSAT")
+                        return {"return" : False,
+                                "last_clause" : feature,
+                                "In" : False}
+        print("== SAT")
+        return {"return" : True,
+                "last_clause" : None,
+                "In" : None}
+
+    @staticmethod
+    def __read_file(filename):
+        res = dict()
+        with open(filename, 'r') as stream:
+            for line in stream:
+                if line[0] != '#' and line != '\n':
+                    feature = line[7:]
+                    flist = feature.split('=')
+                    res[flist[0]] = flist[1].rstrip('\n')
+        return res
+
+    def get_nb_tristate(self):
+        res = {"y" : 0, "m" : 0}
+        for elt in self.__config_d:
+            if self.__config_d[elt] == 'y':
+                res["y"] += 1
+            elif self.__config_d[elt] == 'm':
+                res["m"] += 1
+        return res
