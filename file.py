@@ -217,13 +217,14 @@ class DimacsFile:
 class Checker:
     """ """
 
-    def __init__(self, dimacs_file, csv_file):
+    def __init__(self, dimacs_file, csv_file, verbose=False):
         self.__dimacs = DimacsFile(dimacs_file)
         self.__csv = CSVFile(csv_file)
         self.__cnf = CNF(from_file=dimacs_file)
         self.__formula = Solver(bootstrap_with=self.__cnf.clauses)
         assert self.__formula.solve() is True, "initial formula is UNSAT"
         self.__config_d = None
+        self.__verbose = verbose
 
     def clean(self):
         self.__formula = Solver(bootstrap_with=self.__cnf.clauses)
@@ -236,8 +237,9 @@ class Checker:
     def check_tristate(self, dot_config_file=None):
         if dot_config_file is not None:
             self.set_dot_config_file(dot_config_file)
-        print("=> ADDING FEATURES FROM .CONFIG FILE [TRISTATE]")
-        print("-----------------------------------------------")
+        if self.__verbose:
+            print("=> ADDING FEATURES FROM .CONFIG FILE [TRISTATE]")
+            print("-----------------------------------------------")
         for feature in self.__config_d:
             if feature in self.__dimacs.getFeaturesSet():
                 if feature in self.__csv.getFeaturesSet():
@@ -246,40 +248,48 @@ class Checker:
                         var_for_name = self.__dimacs.getVariableOf(feature)
                         var_for_module = self.__dimacs.getVariableOf(feat_mod)
                         if self.__config_d[feature] == 'y':
-                            print("+ Adding clause: {}({})"
-                                  .format(feature, var_for_name))
+                            if self.__verbose:
+                                print("+ Adding clause: {}({})"
+                                      .format(feature, var_for_name))
                             if not self.__formula\
                                        .add_clause([var_for_name],
                                                    no_return=False):
-                                print("== UNSAT")
+                                if self.__verbose:
+                                    print("== UNSAT")
                                 return {"return" : False,
                                         "last_clause" : feature,
                                         "In" : True}
-                            print("+ Adding clause: {}({})"
-                                  .format(feat_mod, var_for_module))
+                            if self.__verbose:
+                                print("+ Adding clause: {}({})"
+                                      .format(feat_mod, var_for_module))
                             if not self.__formula\
                                        .add_clause([-var_for_module],
                                                    no_return=False):
-                                print("== UNSAT")
+                                if self.__verbose:
+                                    print("== UNSAT")
                                 return {"return" : False,
                                         "last_clause" : feat_mod,
                                         "In" : True}
                         elif self.__config_d[feature] == 'm':
-                            print("+ Adding clause: {}({})"
-                                  .format(feature, var_for_name))
+                            if self.__verbose:
+                                print("+ Adding clause: {}({})"
+                                      .format(feature, var_for_name))
                             if not self.__formula\
                                        .add_clause([var_for_name],
                                                    no_return=False):
-                                print("== UNSAT")
+                                if self.__verbose:
+                                    print("== UNSAT")
                                 return {"return" : False,
                                         "last_clause" : feature,
                                         "In" : True}
-                            print("+ Adding clause: {}({})"
-                                  .format(feat_mod, var_for_module))
+                            if self.__verbose:
+                                print("+ Adding clause: {}({})"
+                                      .format(feat_mod, var_for_module))
                             if not self.__formula\
                                        .add_clause([var_for_module],
                                                    no_return=False):
-                                print("== UNSAT")
+                                if self.__verbose:
+                                    print("== UNSAT")
                                 return {"return" : False,
                                         "last_clause" : feat_mod,
                                         "In" : True}
@@ -287,9 +297,10 @@ class Checker:
             #         print("/!\\ {} not in CSV".format(feature))
             # else:
             #     print("/!\\ {} not in DIMACS".format(feature))
-        print()
-        print("=> ADDING FEATURES THAT ARE NOT IN THE .CONFIG [TRISTATE]")
-        print("---------------------------------------------------------")
+        if self.__verbose:
+            print()
+            print("=> ADDING FEATURES THAT ARE NOT IN THE .CONFIG [TRISTATE]")
+            print("---------------------------------------------------------")
         for feature in self.__csv.getFeaturesSet():
             if feature not in set(self.__config_d)\
                and feature in self.__dimacs.getFeaturesSet():
@@ -297,23 +308,28 @@ class Checker:
                     feat_mod = "{}_MODULE".format(feature)
                     var_for_name = self.__dimacs.getVariableOf(feature)
                     var_for_module = self.__dimacs.getVariableOf(feat_mod)
-                    print("+ Adding clause: {} ({})"
-                          .format(feature, -var_for_name))
+                    if self.__verbose:
+                        print("+ Adding clause: {} ({})"
+                              .format(feature, -var_for_name))
                     if not self.__formula\
                                .add_clause([-var_for_name], no_return=False):
-                        print("== UNSAT")
+                        if self.__verbose:
+                            print("== UNSAT")
                         return {"return" : False,
                                 "last_clause" : feature,
                                 "In" : False}
-                    print("+ Adding clause: {} ({})"
-                          .format(feat_mod, -var_for_module))
+                    if self.__verbose:
+                        print("+ Adding clause: {} ({})"
+                              .format(feat_mod, -var_for_module))
                     if not self.__formula\
                                .add_clause([-var_for_module], no_return=False):
-                        print("== UNSAT")
+                        if self.__verbose:
+                            print("== UNSAT")
                         return {"return" : False,
                                 "last_clause" : feat_mod,
                                 "In" : False}
-        print("== SAT")
+        if self.__verbose:
+            print("== SAT")
         return {"return" : True,
                 "last_clause" : None,
                 "In" : None}
@@ -321,18 +337,21 @@ class Checker:
     def check_bool(self, dot_config_file=None):
         if dot_config_file is not None:
             self.set_dot_config_file(dot_config_file)
-        print("=> ADDING FEATURES FROM .CONFIG FILE [BOOL]")
-        print("-----------------------------------------------")
+        if self.__verbose:
+            print("=> ADDING FEATURES FROM .CONFIG FILE [BOOL]")
+            print("-----------------------------------------------")
         for feature in self.__config_d:
             if feature in self.__dimacs.getFeaturesSet():
                 if feature in self.__csv.getFeaturesSet():
                     if self.__csv.getType(feature) == "BOOL":
                         var_name = self.__dimacs.getVariableOf(feature)
-                        print("+ Adding clause: {} ({})"
-                              .format(feature, var_name))
+                        if self.__verbose:
+                            print("+ Adding clause: {} ({})"
+                                  .format(feature, var_name))
                         if not self.__formula\
                                    .add_clause([var_name], no_return=False):
-                            print("== UNSAT")
+                            if self.__verbose:
+                                print("== UNSAT")
                             return {"return" : False,
                                     "last_clause" : feature,
                                     "In" : True}
@@ -340,22 +359,26 @@ class Checker:
             #         print("/!\\ {} not in CSV".format(feature))
             # else:
             #     print("/!\\ {} not in DIMACS".format(feature))
-        print()
-        print("=> ADDING FEATURES THAT ARE NOT IN THE .CONFIG [BOOL]")
-        print("-----------------------------------------------------")
+        if self.__verbose:
+            print()
+            print("=> ADDING FEATURES THAT ARE NOT IN THE .CONFIG [BOOL]")
+            print("-----------------------------------------------------")
         for feature in self.__csv.getFeaturesSet():
             if feature not in set(self.__config_d)\
                and feature in self.__dimacs.getFeaturesSet():
                 if self.__csv.getType(feature) == "BOOL":
                     var_name = self.__dimacs.getVariableOf(feature)
-                    print("+ Adding clause: {} ({})".format(feature, -var_name))
+                    if self.__verbose:
+                        print("+ Adding clause: {} ({})".format(feature, -var_name))
                     if not self.__formula\
                            .add_clause([-var_name], no_return=False):
-                        print("== UNSAT")
+                        if self.__verbose:
+                            print("== UNSAT")
                         return {"return" : False,
                                 "last_clause" : feature,
                                 "In" : False}
-        print("== SAT")
+        if self.__verbose:
+            print("== SAT")
         return {"return" : True,
                 "last_clause" : None,
                 "In" : None}

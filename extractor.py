@@ -21,12 +21,13 @@ def main():
     parser.add_argument("--csv", type=str, default=CSV, help="all options csv file")
     parser.add_argument("-n", type=int, default=20,
                         help="nb of iteration")
+    parser.add_argument("--verbose", "-v", action="store_true")
     args = parser.parse_args()
     out = "name,nb_yes,nb_mod,bool,tristate,both,last_clause,in\n"
     for i in range(args.n):
         for configuration in CONF:
             os.system("make {} -C {}".format(configuration, args.cdir))
-            checker = Checker(args.dimacs, args.csv)
+            checker = Checker(args.dimacs, args.csv, args.verbose)
             checker.set_dot_config_file("{}/.config".format(args.cdir))
             nb = checker.get_nb_tristate()
             res_bool = checker.check_bool()
