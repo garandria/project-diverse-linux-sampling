@@ -18,12 +18,14 @@ def main():
                         (to launch the Makefile)")
     parser.add_argument("--dimacs", type=str, default=DIMACS,
                         help="dimacs file name")
-    parser.add_argument("--csv", type=str, default=CSV, help="all options csv file")
+    parser.add_argument("--csv", type=str, default=CSV,
+                        help="all options csv file")
     parser.add_argument("-n", type=int, default=20,
                         help="nb of iteration")
     parser.add_argument("--verbose", "-v", action="store_true")
     args = parser.parse_args()
-    out = "name,nb_yes,nb_mod,bool,tristate,both,last_clause,in\n"
+    stream = open("extractor_out.csv", "w")
+    stream.write("name,nb_yes,nb_mod,bool,tristate,both,last_clause,in\n")
     for i in range(args.n):
         for configuration in CONF:
             os.system("make {} -C {}".format(configuration, args.cdir))
@@ -43,13 +45,11 @@ def main():
                                             res_both["last_clause"])
             in_formula = "{}/{}/{}".format(res_bool["In"], res_tristate["In"],
                                            res_both["In"])
-            out += "{},{},{},{},{},{},{},{}\n"\
+            stream.write("{},{},{},{},{},{},{},{}\n"\
                 .format(name, nb["y"], nb["m"], res_bool["return"],
                         res_tristate["return"], res_both["return"],
-                        last_clause, in_formula)
-    with open("extractor_out.csv", "w") as stream:
-        stream.write(out)
-
+                        last_clause, in_formula))
+    stream.close()
 
 if __name__ == '__main__':
     main()
