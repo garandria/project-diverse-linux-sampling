@@ -100,5 +100,5 @@ This program will show you what is happening during the whole process
 `extractor_out.csv`. If you want to keep the trace, just redirect the
 output into a like so:
 ```
-python extractor.py --cdir linux-kernel/path --dimacs dimacs/file --csv csv/file >> my_trace
+python extractor.py --cdir linux-kernel/path --dimacs dimacs/file --csv csv/file --verbose >> my_trace
 ```
