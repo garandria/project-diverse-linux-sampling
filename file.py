@@ -215,7 +215,7 @@ class DimacsFile:
 
 
 class Checker:
-    """ Checker class """
+    """Checker class"""
 
     def __init__(self, dimacs_file, csv_file, verbose=False):
         self.__dimacs = DimacsFile(dimacs_file)
@@ -228,15 +228,15 @@ class Checker:
         self.__assumptions = []
 
     def clean(self):
-        """ Cleans the assumptions """
+        """Cleans the assumptions"""
         self.__assumptions = []
 
     def set_dot_config_file(self, filename):
-        """ Sets the .config source file """
+        """Sets the .config source file"""
         self.__config_d = Checker.__read_file(filename)
 
     def check_tristate(self, dot_config_file=None):
-        """ Checks tristate by adding it in assumptions """
+        """Checks tristate by adding it in assumptions"""
         if dot_config_file is not None:
             self.set_dot_config_file(dot_config_file)
         if self.__verbose:
@@ -306,7 +306,7 @@ class Checker:
                 "In" : None}
 
     def check_bool(self, dot_config_file=None):
-        """ Checks boolean type by adding it in the assumptions """
+        """Checks boolean type by adding it in the assumptions"""
         if dot_config_file is not None:
             self.set_dot_config_file(dot_config_file)
         if self.__verbose:
@@ -369,7 +369,7 @@ class Checker:
         return res
 
     def get_nb_tristate(self):
-        """   """
+        """Counts the number of tristates number of modules and always yes"""
         res = {"y" : 0, "m" : 0}
         for elt in self.__config_d:
             if self.__config_d[elt] == 'y':
