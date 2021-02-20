@@ -11,8 +11,8 @@ def sanity_check_optionsvalues(dimacs, alloptions_file, verbose=False):
 
     :param dimacs: DIMACS file contaning the formula to check
     :type dimacs: str
-    :param alloptions: CSV file of all options
-    :type alloptions: str
+    :param alloptions_file: CSV file of all options
+    :type alloptions_file: str
     """
 
     impossible_values = dict()
