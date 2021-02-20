@@ -118,5 +118,5 @@ class Alloptions:
         :rtype: str
         """
         ktype = self.__alloptions\
-                    .query("option == " + '"' + option_name + '"')['type']
+                    .query("option == " + '"' + symbol + '"')['type']
         return ktype.values[0]
