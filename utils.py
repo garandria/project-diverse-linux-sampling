@@ -74,6 +74,18 @@ class DimacsFla:
         """
         return self.__dimacs[id]
 
+    def get_id(self, symbol):
+        """Retrieve DIMACS ID of a symbol
+        
+        :param symbol: symbol name
+        :type symbol: str
+        :return: DIMACS ID iff symbol in formula; None otherwise
+        :rtype: int iff symbol in formula; NoneType otherswise
+        """
+        for k, v in variables.items():
+            if v == symbol:
+                return v
+
 
 class Alloptions:
     """Alloptions class represents the csv of all options of a Linux Kernel.
