@@ -6,7 +6,7 @@ import os
 import utils
 import argparse
 
-def sanity_check_optionsvalues(dimacs, alloptions, verbose=False):
+def sanity_check_optionsvalues(dimacs, alloptions_file, verbose=False):
     """Sanity checks the formula
 
     :param dimacs: DIMACS file contaning the formula to check
@@ -26,7 +26,7 @@ def sanity_check_optionsvalues(dimacs, alloptions, verbose=False):
     fla = dimacs.get_formula()
     variables = dimacs.get_variables()
 
-    alloptions = utils.Alloptions(alloptions)
+    alloptions = utils.Alloptions(alloptions_file)
 
     # sanity check
     with Solver(bootstrap_with=fla.clauses) as l:
