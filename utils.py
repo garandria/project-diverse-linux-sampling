@@ -44,6 +44,13 @@ class DimacsFla:
         """
         return self.__dimacs
 
+    def get_formula(self):
+        """Gives the formula
+        :return: formula
+        :rtype: pysat.formula.CNF
+        """
+        return self.__formula
+    
     def get_kmodule(self, symbol):
         """Retrieve the DIMACS ID of module variable associated with the given 
         symbol.
