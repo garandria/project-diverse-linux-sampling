@@ -120,3 +120,23 @@ class Alloptions:
         ktype = self.__alloptions\
                     .query("option == " + '"' + symbol + '"')['type']
         return ktype.values[0]
+
+
+def read_config(config):
+    """Read a config
+
+    :param config_file: path to a `.config` file
+    :type config_file: string
+    :return: a dictionary representation of the `.config` file.
+    :rtype: dict
+
+    """
+    d = dict()
+    with open(config, 'r') as f:
+        line = f.readline()
+        while line:
+            if not line.startswith('#') and line != '\n':
+                m = re.search(r'CONFIG_(\w+)=([\w"-/]+)', line)
+                d[m.group(1)] = m.group(2)
+            line = f.readline()
+    return d
