@@ -102,12 +102,12 @@ class Alloptions:
         self.__alloptions = pd.read_csv(alloptions)
 
     def get_options(self):
-        """Gives the dataframe containing options and their types
+        """Gives the set of options
         
         :return: options and their types
-        :rtype: pd.Dataframe
+        :rtype: set
         """
-        return self.__alloptions
+        return set(self.__alloptions.option)
     
     def get_kconfig_type(self, symbol):
         """Retrieve the type of a kconfig symbol
