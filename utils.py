@@ -64,6 +64,17 @@ class DimacsFla:
             if v == "{}_MODULE".format(symbol):
                 return k
 
+    def get_symbol(self, id):
+        """Retrieve symbol name with its ID
+
+        :param id: Dimacs ID of the symbol
+        :type id: int
+        :return: symbol name
+        :rtype: string
+        """
+        return self.__dimacs[id]
+
+
 class Alloptions:
     """Alloptions class represents the csv of all options of a Linux Kernel.
 
